@@ -71,20 +71,19 @@ const FeaturesForm = () => {
       });
 
       if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(text || `Request failed with status ${res.status}`);
+        throw new Error(`Request failed with status ${res.status}`);
       }
 
       const result = await res.json().catch(() => (() => {
         console.error('Failed to parse JSON response')
       }));
       console.log(result);
-      toast(JSON.stringify(result));
+      toast.success(JSON.stringify(result));
       // reset();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       console.error(err);
-      toast(message);
+      toast.error(message);
     }
   };
 
@@ -104,8 +103,6 @@ const FeaturesForm = () => {
         </Button>
       </form>
     </Form>
-
-
   );
 }
 export default FeaturesForm;
