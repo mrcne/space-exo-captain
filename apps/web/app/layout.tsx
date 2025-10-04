@@ -4,21 +4,23 @@ import { Geist, Geist_Mono } from "next/font/google";
 import SiteLayout from "@/components/layout/SiteLayout";
 import { Toaster } from "@/components/ui/sonner"
 
+import {pageTitle} from "@/lib/utils";
+
 import "./globals.css";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: '--font-geist-sans',
   subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+  variable: '--font-geist-mono',
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Captain Exoplanet",
-  description: "Exoplanet finder and explorer",
+  title: pageTitle,
+  description: 'Exoplanet finder and explorer',
 };
 
 export default function RootLayout({
