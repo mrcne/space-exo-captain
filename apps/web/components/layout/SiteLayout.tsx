@@ -7,10 +7,8 @@ import { usePathname } from "next/navigation";
 
 const SiteLayout = ({ children }: { children: React.ReactNode }) => {
   const [open, setOpen] = React.useState(false);
-  const pathname = usePathname();
 
   const NavLink = ({ href, label }: { href: string; label: string; }) => {
-    const active = pathname === href;
     return (
       <Link
         href={href}
@@ -24,7 +22,7 @@ const SiteLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="flex h-14 max-w-screen-xl items-center gap-3 px-4">
+        <div className="flex h-14 items-center gap-3 px-4">
           <div className="md:hidden">
             <Dialog.Root open={open} onOpenChange={setOpen}>
               <Dialog.Trigger asChild>
@@ -64,7 +62,7 @@ const SiteLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </header>
 
-      <div className="grid max-w-screen-xl grid-cols-1 md:grid-cols-[220px_1fr]">
+      <div className="grid grid-cols-1 md:grid-cols-[220px_1fr]">
         <aside className="sticky top-14 hidden h-[calc(100dvh-56px)] border-r bg-sidebar p-4 md:block">
           <nav className="grid gap-1">
             <NavLink href="/" label="Home" />
