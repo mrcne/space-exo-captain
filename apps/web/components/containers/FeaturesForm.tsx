@@ -10,41 +10,34 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+// @TODO: serve definitions from API
+import featureColumns from "../../data/feature_columns.json";
+
 const fieldIsRequiredError = "This field is required";
 
-const FeaturesSchema = z.object({
-  feature1: z.string().min(1, fieldIsRequiredError),
-  feature2: z.string().min(1, fieldIsRequiredError),
-  feature3: z.string().min(1, fieldIsRequiredError),
-  feature4: z.string().min(1, fieldIsRequiredError),
-  feature5: z.string().min(1, fieldIsRequiredError),
-  feature6: z.string().min(1, fieldIsRequiredError),
-});
-
-type FeaturesInput = z.infer<typeof FeaturesSchema>;
+type FeaturesInput = Record<string, string>;
 
 export type Props = {
   onSuccess: (data: string) => void;
 };
 
 const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
+  const FeaturesSchema = z.record(z.string(), z.string().min(1, fieldIsRequiredError));
+
+  const defaultValues = featureColumns.reduce<Record<string, string>>((acc, column) => {
+    acc[column] = '';
+    return acc;
+  }, {});
   const form = useForm<FeaturesInput>({
     resolver: zodResolver(FeaturesSchema),
-    defaultValues: {
-      feature1: "",
-      feature2: "",
-      feature3: "",
-      feature4: "",
-      feature5: "",
-      feature6: "",
-    },
+    defaultValues,
     mode: "onSubmit",
   });
 
   type FeatureFieldProps = {
     name: keyof FeaturesInput;
     label: string;
-    description: string;
+    description?: string;
   };
 
   const FeatureField = ({ name, label, description }: FeatureFieldProps) => {
@@ -56,9 +49,9 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
           <FormItem>
             <FormLabel>{label}</FormLabel>
             <FormControl>
-              <Input placeholder={label} {...field} />
+              <Input {...field} />
             </FormControl>
-            <FormDescription>{description}</FormDescription>
+            { !!description && <FormDescription>{description}</FormDescription> }
             <FormMessage/>
           </FormItem>
         )}
@@ -67,11 +60,15 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
   };
 
   const onSubmit: SubmitHandler<FeaturesInput> = async (data) => {
+    console.log(data);
+    const featuresData = {
+      features: data,
+    }
     try {
       const res = await fetch("/api/classify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(featuresData),
       });
 
       if (!res.ok) {
@@ -96,12 +93,9 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <FieldGroup>
-          <FeatureField name="feature1" label="Feature 1" description="Feature description." />
-          <FeatureField name="feature2" label="Feature 2" description="Feature description." />
-          <FeatureField name="feature3" label="Feature 3" description="Feature description." />
-          <FeatureField name="feature4" label="Feature 4" description="Feature description." />
-          <FeatureField name="feature5" label="Feature 5" description="Feature description." />
-          <FeatureField name="feature6" label="Feature 6" description="Feature description." />
+          { featureColumns.map((column) => (
+            <FeatureField key={column} name={column} label={column}/>
+          ))}
         </FieldGroup>
         <Button className="mt-4 float-right" type="submit" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? "Submitting..." : "Check classification"}
