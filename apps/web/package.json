@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "init": "echo 'MODEL_API_CLASSIFY=http://localhost:8000/predict' > .env",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint"
