@@ -1,0 +1,29 @@
+{
+  "target": "tfopwg_disp",
+  "drop_cols": [
+    "rowid",
+    "toi",
+    "tid",
+    "ctoi_alias",
+    "rastr",
+    "decstr",
+    "toi_created",
+    "rowupdate"
+  ],
+  "test_size": 0.2,
+  "random_state": 42,
+  "use_smote": false,
+  "model": {
+    "name": "random_forest",
+    "params": {
+      "random_state": 42,
+      "class_weight": "balanced",
+      "n_estimators": 200
+    }
+  },
+  "scoring": "balanced_accuracy",
+  "grid_search": {
+    "enabled": false,
+    "param_grid": {}
+  }
+}
