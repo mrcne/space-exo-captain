@@ -23,7 +23,11 @@ const FeaturesSchema = z.object({
 
 type FeaturesInput = z.infer<typeof FeaturesSchema>;
 
-const FeaturesForm = () => {
+export type Props = {
+  onSuccess: (data: string) => void;
+};
+
+const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
   const form = useForm<FeaturesInput>({
     resolver: zodResolver(FeaturesSchema),
     defaultValues: {
@@ -78,7 +82,8 @@ const FeaturesForm = () => {
         console.error('Failed to parse JSON response')
       }));
       console.log(result);
-      toast.success(JSON.stringify(result));
+      onSuccess(result);
+      // toast.success(JSON.stringify(result));
       // reset();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
