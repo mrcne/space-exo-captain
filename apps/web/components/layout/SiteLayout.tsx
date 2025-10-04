@@ -10,8 +10,9 @@ import {cn, pageTitle} from "@/lib/utils";
 
 const SiteLayout = ({ children }: { children: React.ReactNode }) => {
   const [open, setOpen] = React.useState(false);
-    const pathname = usePathname();
+  const pathname = usePathname();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const NavLink = ({ href, label, icon: Icon }: { href: string; label: string; icon: React.ComponentType<any>; }) => {
     const active = pathname === href;
     return (
