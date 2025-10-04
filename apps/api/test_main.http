@@ -1,0 +1,177 @@
+# Test FastAPI endpoints with supporting tools (many IDEs have that)
+
+### Health check
+
+GET http://127.0.0.1:8000/health
+Accept: application/json
+
+### Empty body
+
+POST http://127.0.0.1:8000/predict
+Accept: application/json
+
+### Valid prediction (replace values with real numbers for all features)
+POST http://localhost:8000/predict
+Content-Type: application/json
+
+{
+  "features": {
+    "toipfx": 0.0,
+    "pl_pnum": 1,
+    "ra": 123.45,
+    "dec": -54.321,
+    "st_pmra": 0.0,
+    "st_pmraerr1": 0.0,
+    "st_pmraerr2": 0.0,
+    "st_pmralim": 0,
+    "st_pmrasymerr": 0.0,
+    "st_pmdec": 0.0,
+    "st_pmdecerr1": 0.0,
+    "st_pmdecerr2": 0.0,
+    "st_pmdeclim": 0,
+    "st_pmdecsymerr": 0.0,
+    "pl_tranmid": 0.0,
+    "pl_tranmiderr1": 0.0,
+    "pl_tranmiderr2": 0.0,
+    "pl_tranmidlim": 0,
+    "pl_tranmidsymerr": 0.0,
+    "pl_orbper": 1.0,
+    "pl_orbpererr1": 0.0,
+    "pl_orbpererr2": 0.0,
+    "pl_orbperlim": 0,
+    "pl_orbpersymerr": 0.0,
+    "pl_trandurh": 0.1,
+    "pl_trandurherr1": 0.0,
+    "pl_trandurherr2": 0.0,
+    "pl_trandurhlim": 0,
+    "pl_trandurhsymerr": 0.0,
+    "pl_trandep": 0.001,
+    "pl_trandeperr1": 0.0,
+    "pl_trandeperr2": 0.0,
+    "pl_trandeplim": 0,
+    "pl_trandepsymerr": 0.0,
+    "pl_rade": 1.0,
+    "pl_radeerr1": 0.0,
+    "pl_radeerr2": 0.0,
+    "pl_radelim": 0,
+    "pl_radesymerr": 0.0,
+    "pl_insol": 1.0,
+    "pl_eqt": 300.0,
+    "st_tmag": 10.0,
+    "st_tmagerr1": 0.0,
+    "st_tmagerr2": 0.0,
+    "st_tmaglim": 0,
+    "st_tmagsymerr": 0.0,
+    "st_dist": 100.0,
+    "st_disterr1": 0.0,
+    "st_disterr2": 0.0,
+    "st_distlim": 0,
+    "st_distsymerr": 0.0,
+    "st_teff": 5500,
+    "st_tefferr1": 0.0,
+    "st_tefferr2": 0.0,
+    "st_tefflim": 0,
+    "st_teffsymerr": 0.0,
+    "st_logg": 4.5,
+    "st_loggerr1": 0.0,
+    "st_loggerr2": 0.0,
+    "st_logglim": 0,
+    "st_loggsymerr": 0.0,
+    "st_rad": 1.0,
+    "st_raderr1": 0.0,
+    "st_raderr2": 0.0,
+    "st_radlim": 0,
+    "st_radsymerr": 0.0
+  }
+}
+
+###
+
+### Missing feature (should return 400)
+POST http://localhost:8000/predict
+Content-Type: application/json
+
+{
+  "features": {
+    "toipfx": 0.0,
+    "pl_pnum": 1
+  }
+}
+
+###
+
+### Extra feature (should return 400)
+POST http://localhost:8000/predict
+Content-Type: application/json
+
+{
+  "features": {
+    "toipfx": 0.0,
+    "pl_pnum": 1,
+    "ra": 123.45,
+    "dec": -54.321,
+    "st_pmra": 0.0,
+    "st_pmraerr1": 0.0,
+    "st_pmraerr2": 0.0,
+    "st_pmralim": 0,
+    "st_pmrasymerr": 0.0,
+    "st_pmdec": 0.0,
+    "st_pmdecerr1": 0.0,
+    "st_pmdecerr2": 0.0,
+    "st_pmdeclim": 0,
+    "st_pmdecsymerr": 0.0,
+    "pl_tranmid": 0.0,
+    "pl_tranmiderr1": 0.0,
+    "pl_tranmiderr2": 0.0,
+    "pl_tranmidlim": 0,
+    "pl_tranmidsymerr": 0.0,
+    "pl_orbper": 1.0,
+    "pl_orbpererr1": 0.0,
+    "pl_orbpererr2": 0.0,
+    "pl_orbperlim": 0,
+    "pl_orbpersymerr": 0.0,
+    "pl_trandurh": 0.1,
+    "pl_trandurherr1": 0.0,
+    "pl_trandurherr2": 0.0,
+    "pl_trandurhlim": 0,
+    "pl_trandurhsymerr": 0.0,
+    "pl_trandep": 0.001,
+    "pl_trandeperr1": 0.0,
+    "pl_trandeperr2": 0.0,
+    "pl_trandeplim": 0,
+    "pl_trandepsymerr": 0.0,
+    "pl_rade": 1.0,
+    "pl_radeerr1": 0.0,
+    "pl_radeerr2": 0.0,
+    "pl_radelim": 0,
+    "pl_radesymerr": 0.0,
+    "pl_insol": 1.0,
+    "pl_eqt": 300.0,
+    "st_tmag": 10.0,
+    "st_tmagerr1": 0.0,
+    "st_tmagerr2": 0.0,
+    "st_tmaglim": 0,
+    "st_tmagsymerr": 0.0,
+    "st_dist": 100.0,
+    "st_disterr1": 0.0,
+    "st_disterr2": 0.0,
+    "st_distlim": 0,
+    "st_distsymerr": 0.0,
+    "st_teff": 5500,
+    "st_tefferr1": 0.0,
+    "st_tefferr2": 0.0,
+    "st_tefflim": 0,
+    "st_teffsymerr": 0.0,
+    "st_logg": 4.5,
+    "st_loggerr1": 0.0,
+    "st_loggerr2": 0.0,
+    "st_logglim": 0,
+    "st_loggsymerr": 0.0,
+    "st_rad": 1.0,
+    "st_raderr1": 0.0,
+    "st_raderr2": 0.0,
+    "st_radlim": 0,
+    "st_radsymerr": 0.0,
+    "extra_feature": 123
+  }
+}
