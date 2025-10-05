@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 import argparse, json
 from pathlib import Path
@@ -10,21 +9,22 @@ from tensorflow import keras
 from ..data import load_table
 
 def main():
-    ap = argparse.ArgumentParser(description="Keras DL inference for TFOPWG disposition (tabular)")
+    ap = argparse.ArgumentParser(description="Keras DL inference for TFOPWG (tabular)")
     ap.add_argument("--input", required=True, help="CSV/TSV to predict on")
     ap.add_argument("--artifacts", required=True, help="DL artifact folder (contains dl_model.keras & preprocessor.joblib)")
-    ap.add_argument("--output", default=None, help="Output CSV path (defaults: artifacts/pred_dl.csv)")
+    ap.add_argument("--output", default=None, help="Output CSV path (defaults to <artifacts>/predictions.csv)")
     args = ap.parse_args()
 
     art = Path(args.artifacts)
     pre = joblib.load(art / "preprocessor.joblib")
     model = keras.models.load_model(art / "dl_model.keras")
-    meta = json.load(open(art / "dl_metadata.json"))
+    meta = json.loads((art / "metadata.json").read_text()) if (art / "metadata.json").exists() \
+           else json.loads((art / "dl_metadata.json").read_text())
 
-    drop_cols = meta["drop_cols"]
+    drop_cols = meta.get("drop_cols", [])
     classes = meta["classes"]
-    model_kind = meta.get("model_kind", "mlp")
-    input_dim = meta["input_dim"]
+    model_kind = meta.get("model_kind", meta.get("model_name", "mlp"))
+    input_dim = meta.get("input_dim", None)
 
     df = load_table(args.input)
     df = df.drop(columns=drop_cols, errors="ignore")
@@ -35,6 +35,8 @@ def main():
     if hasattr(X, "toarray"):
         X = X.toarray()
     if model_kind == "cnn1d":
+        if input_dim is None:
+            input_dim = X.shape[1]
         X = X.reshape((-1, input_dim, 1))
 
     proba = model.predict(X, verbose=0)
@@ -46,7 +48,7 @@ def main():
     for i, c in enumerate(classes):
         out[f"proba_{c}"] = proba[:, i]
 
-    out_path = Path(args.output) if args.output else (art / "pred_dl.csv")
+    out_path = Path(args.output) if args.output else (art / "predictions.csv")
     out.to_csv(out_path, index=False)
     print(f"Wrote: {out_path.resolve()}")
 

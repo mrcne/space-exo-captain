@@ -195,13 +195,13 @@ PRESETS: Dict[str, Dict[str, Any]] = {
 
     # 7) Stacking (XGB + RF + HistGB → LogReg)
     "stack_basic": {
-        "model": { "name": "random_forest", "params": { "n_estimators": 30 } },  # ignored when stacking.enabled=True
+        "model": { "name": "random_forest", "params": { "n_estimators": 10 } },  # ignored when stacking.enabled=True
         "stacking": {
             "enabled": True,
             "base_models": [
-                ["xgboost", {"n_estimators": 30, "learning_rate": 0.05, "max_depth": 6,
+                ["xgboost", {"n_estimators": 10, "learning_rate": 0.05, "max_depth": 6,
                              "subsample": 0.8, "colsample_bytree": 0.8, "tree_method": "hist", "eval_metric": "mlogloss"}],
-                ["random_forest", {"n_estimators": 30, "class_weight": "balanced_subsample", "max_features": "sqrt"}],
+                ["random_forest", {"n_estimators": 10, "class_weight": "balanced_subsample", "max_features": "sqrt"}],
                 ["histgb", {"max_depth": None}]
             ],
             "final_model": ["logreg", {"C": 1.0, "max_iter": 50}],
@@ -211,7 +211,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
             "enabled": True,
             "cv": 5,
             "param_grid": {
-                "clf__final_estimator__C": [0.5, 1.0, 2.0]
+                "clf__final_estimator__C": [0.5, 1.0]
             }
         }
     },
@@ -222,8 +222,8 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "stacking": {
             "enabled": True,
             "base_models": [
-                ["random_forest", {"n_estimators": 10, "class_weight": "balanced_subsample", "max_features": "sqrt"}],
-                ["extra_trees",  {"n_estimators": 10, "class_weight": "balanced_subsample"}],
+                ["random_forest", {"n_estimators": 5, "class_weight": "balanced_subsample", "max_features": "sqrt"}],
+                ["extra_trees",  {"n_estimators": 5, "class_weight": "balanced_subsample"}],
                 ["histgb", {"max_depth": None}]
             ],
             "final_model": ["svc", {"C": 1.0, "kernel": "rbf", "probability": True}],
@@ -233,7 +233,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
             "enabled": True,
             "cv": 5,
             "param_grid": {
-                "clf__final_estimator__C": [0.5, 1.0, 2.0],
+                "clf__final_estimator__C": [0.5, 1.0],
                 "clf__final_estimator__kernel": ["rbf", "linear"]
             }
         }

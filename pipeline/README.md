@@ -1,95 +1,179 @@
+# Space-Exo Captain — Unified ML & DL Pipelines
 
-# Exoplanet TFOPWG Disposition — Modular Training & Inference
+This repo standardizes **evaluation artifacts** across **ML** and **DL** runs so that every training (and inference) produces the same file names in its artifact folder:
 
-Minimal, modular Python package to train a classifier for **`tfopwg_disp`** (CP | FP | KP | PC) and run inference on unseen CSV/TSV files.
+```
+feature_columns.json
+metadata.json
+test_metrics.json
+test_classification_report.txt
+predictions.csv
+test_cm.png
+```
 
-## Quick Start
+Model binaries differ by pipeline (as intended):
+- **ML**: serialized sklearn pipeline (e.g., `model.joblib` inside the artifacts folder).
+- **DL (Keras)**: `dl_model.keras` (+ `preprocessor.joblib`).
+- **TabNet**: `tabnet.zip` (+ `preprocessor.joblib`).
+
+> All commands below assume your package layout `exo_ml/` and a Python environment already activated. Replace file paths as needed.
+
+---
+
+## 0) Environment & Installation (once)
 
 ```bash
-# 1) Create & activate a venv (recommended)
-python -m venv .venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
+# Core
+pip install -r requirements.txt
 
-# 2) Install deps
-pip install -U pandas numpy scikit-learn joblib matplotlib
+# If using DL (Keras / TensorFlow)
+pip install tensorflow==2.15.* tensorflow-io-gcs-filesystem
 
-# (optional for SMOTE)
-pip install imbalanced-learn
+# If using TabNet
+pip install pytorch-tabnet torch torchvision torchaudio
+```
+On Windows (PowerShell), the commands are identical; ensure your virtualenv is active:
+```powershell
+.\.venv\Scripts\Activate.ps1
 ```
 
-### Train
+---
+
+## 1) Inputs & Configuration
+
+- **Input CSV**: TFOPWG/TOI/cumulative datasets with the target column defined in config.
+- **Config**: Pass either a JSON path or a `preset:<name>` from the list below.
+
+### Supported ML presets (from `config.py`)
+| Preset | Base model | Grid Search | Stacking |
+|---|---|---|---|
+| `preset:rf` | `random_forest` | on | off |
+| `preset:extra_trees` | `extra_trees` | on | off |
+| `preset:histgb` | `histgb` | on | off |
+| `preset:xgb` | `xgboost` | off | off |
+| `preset:svc` | `svc` | on | off |
+| `preset:logreg` | `logreg` | on | off |
+| `preset:stack_basic` | `random_forest` | on | on |
+| `preset:stack_svc_meta` | `random_forest` | on | on |
+
+---
+
+## 2) Train — **ML** (scikit-learn pipeline)
+
+### Quick examples (one-liners)
+```bash
+# Random Forest (with GridSearch enabled in preset)
+python -m exo_ml.train --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts/ml_rf --config preset:rf
+
+# Extra Trees
+python -m exo_ml.train --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts/ml_et --config preset:extra_trees
+
+# Histogram Gradient Boosting
+python -m exo_ml.train --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts/ml_histgb --config preset:histgb
+
+# XGBoost
+python -m exo_ml.train --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts/ml_xgb --config preset:xgb
+
+# SVC
+python -m exo_ml.train --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts/ml_svc --config preset:svc
+
+# Logistic Regression
+python -m exo_ml.train --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts/ml_logreg --config preset:logreg
+
+# Stacking (basic)
+python -m exo_ml.train --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts/ml_stack_basic --config preset:stack_basic
+
+# Stacking (SVC as meta-learner)
+python -m exo_ml.train --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts/ml_stack_svc --config preset:stack_svc_meta
+```
+
+**Flags**
+- `--input`: path to CSV/TSV.
+- `--config`: JSON path or one of the `preset:*` above.
+- `--outdir`: root for timestamped artifact folder.
+
+**Outputs**: standardized files + model binary for the chosen method.
+
+---
+
+## 3) Infer — **ML**
 
 ```bash
-# Use your NASA TOI CSV/TSV (clean or raw; loader auto-detects TSV and ignores '#' comments)
-python -m exo_ml.train --input data/train_data.csv --outdir artifacts
-# Optionally pass a config:
-# python -m exo_ml.train --input data/train_data.csv --config configs/config.json --outdir artifacts
+python -m exo_ml.infer   --input data/new_candidates.csv   --artifacts artifacts/ml_xgb/2025-10-05_23-59-59   --with-proba
+# Default output: <artifacts>/predictions.csv  (use --output to override)
 ```
 
-Outputs go to `artifacts/<timestamp>/`:
-- `pipeline.joblib` — full Pipeline (preprocessor + model)
-- `feature_columns.json` — exact feature order used
-- `metadata.json` — target, dropped columns, classes, versions
-- `test_metrics.json`, `test_classification_report.txt`, `test_cm.png`
+---
 
-### Inference
+## 4) Train — **DL (Keras)**
+
+Supported `--arch` values:
+- `mlp_bn` (default)
+- `mlp`
+- `transformer` (FT-style tabular transformer)
+- `cnn1d`
 
 ```bash
-python -m exo_ml.infer --input data/testing.csv --artifacts artifacts/20250101_123456 --with-proba
-# Writes predictions to artifacts/<timestamp>/predictions.csv by default; or use --output path.csv
+python -m exo_ml.deep.train_dl   --input data/TOI_2025.10.03_10.51.46.csv   --outdir artifacts/dl_mlpbn   --arch mlp_bn   --epochs 120   --batch-size 256   --val-size 0.2
 ```
 
-The script aligns new data to the **exact** training feature set (missing columns become NaN and are imputed). Extra columns are ignored.
+**Outputs**: standardized files + `dl_model.keras` + `preprocessor.joblib` (+ training curves).
 
-## Configuration
+---
 
-See `configs/config.json` for overridable options:
-```json
-{
-  "target": "tfopwg_disp",
-  "drop_cols": ["rowid","toi","tid","ctoi_alias","rastr","decstr","toi_created","rowupdate"],
-  "test_size": 0.2,
-  "random_state": 42,
-  "use_smote": false,
-  "model": {
-    "name": "random_forest",
-    "params": { "random_state": 42, "class_weight": "balanced", "n_estimators": 200 }
-  },
-  "scoring": "balanced_accuracy",
-  "grid_search": { "enabled": false, "param_grid": {} }
-}
-```
+## 5) Infer — **DL (Keras)**
 
-> This base version trains a **RandomForest** pipeline. You can extend `exo_ml/models.py` to add SVM, LogReg, XGBoost, etc., and optionally wire up `GridSearchCV` if you want hyperparameter tuning.
-
-## Notes
-
-- The `preprocess` step includes **median imputation + scaling** (numeric) and **most-frequent imputation + OneHotEncoder** (categorical) with `handle_unknown="ignore"` so unseen categories won’t break inference.
-- For severely imbalanced labels, consider enabling SMOTE (requires `imbalanced-learn`) or using class-weighted models. You can also change the primary metric in config.
-- If you export from the NASA site with '#' metadata lines, the loader will handle it if it's TSV. For direct, clean CSV, consider NASA TAP: `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+*+from+toi&format=csv`.
-```
-
-## Deep Learning (Keras) for Tabular TOI data
-
-Three ready models:
-- `mlp` — dense MLP baseline
-- `cnn1d` — 1D Conv over feature sequence
-- `transformer` — lightweight feature-wise Transformer
-
-### Train DL
 ```bash
-python -m exo_ml.deep.train_dl --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts --arch mlp_bn
-python -m exo_ml.deep.train_dl --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts --arch mlp_bn --stack-model xgb
-python -m exo_ml.deep.train_dl --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts --arch mlp_bn --stack-model xgb --vote --vote-weights 0.7,0.3
-python -m exo_ml.deep.tabnet_train --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts
+python -m exo_ml.deep.infer_dl   --input data/new_candidates.csv   --artifacts artifacts/dl_mlpbn/2025-10-05_23-59-59
+# Default output: <artifacts>/predictions.csv
 ```
 
-Artifacts include:
-- `preprocessor.joblib`  (fitted ColumnTransformer)
-- `dl_model.keras`       (Keras model)
-- `dl_metadata.json`
-- `dl_accuracy.png`, `dl_loss.png`
+---
 
-### Inference DL
+## 6) Train — **TabNet**
+
 ```bash
-python -m exo_ml.deep.infer_dl --input data/new_unseen.csv --artifacts artifacts/2025XXXX_XXXXXX
+python -m exo_ml.deep.tabnet_train   --input data/TOI_2025.10.03_10.51.46.csv   --outdir artifacts/tabnet   --n-d 64 --n-a 64 --n-steps 5 --gamma 1.5   --lambda-sparse 1e-4 --lr 0.002   --max-epochs 200 --patience 20
 ```
+
+**Outputs**: standardized files + `tabnet.zip` + `preprocessor.joblib`.
+
+---
+
+## 7) Standard Files — Ground Truth
+
+- **`feature_columns.json`**: training features (ordered).
+- **`metadata.json`**: pipeline type, model/arch, target, dropped columns, classes, (DL) input_dim.
+- **`test_metrics.json`**: accuracy, balanced_accuracy, macro/weighted precision/recall/f1.
+- **`test_classification_report.txt`**: sklearn report (digits=4).
+- **`test_cm.png`**: confusion matrix for the held-out split.
+- **`predictions.csv`**:
+  - Train time: held-out split with `true_label`, `pred_label`, and `proba_*`.
+  - Inference: full input with `pred_label` and `proba_*`.
+
+---
+
+## 8) Windows PowerShell Examples
+
+```powershell
+python -m exo_ml.train --input data\TOI_2025.10.03_10.51.46.csv --outdir artifacts\ml_xgb --config preset:xgb
+python -m exo_ml.infer --input data
+ew_candidates.csv --artifacts artifacts\ml_xgb5-10-05_23-59-59 --with-proba
+
+python -m exo_ml.deep.train_dl --input data\TOI_2025.10.03_10.51.46.csv --outdir artifacts\dl_mlpbn --arch mlp_bn --epochs 120 --batch-size 256
+python -m exo_ml.deep.infer_dl --input data
+ew_candidates.csv --artifacts artifacts\dl_mlpbn5-10-05_23-59-59
+
+python -m exo_ml.deep.tabnet_train --input data\TOI_2025.10.03_10.51.46.csv --outdir artifacts	abnet --max-epochs 200 --patience 20
+```
+
+---
+
+## 9) Notes & Troubleshooting
+
+- **TensorFlow**: compiled with `SparseCategoricalCrossentropy()` **without** `label_smoothing` for compatibility.
+- **Imbalance**: DL uses `class_weight`; ML can use class-weighted models (see presets) or sampling strategies.
+- **Reproducibility**: Seeds set where possible; small variations may occur on GPU.
+- **Schema**: Keep train/infer columns aligned. The inference scripts reindex to `feature_columns.json`.
+
+Happy hunting for exoplanets 🚀
