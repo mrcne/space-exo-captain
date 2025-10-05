@@ -1,0 +1,23 @@
+version: '3.8'
+
+# Docker compose mainly targeted towards local / development setup
+
+services:
+  fastapi:
+    build:
+      # because we want to include artifacts from the pipeline directory
+      context: ./
+      dockerfile: ./apps/api/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/api:/app
+
+  nextjs:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ./apps/web:/app
+    ports:
+      - "3000:3000"
+    command: sh -c "npm install && npm run dev"

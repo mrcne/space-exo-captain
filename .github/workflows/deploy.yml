@@ -1,0 +1,58 @@
+name: Build docker, Push to Registry and Deploy to Heroku
+
+on:
+  push:
+    branches: [ main, apps-api-hosting ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Required secrets:
+# - HEROKU_API_KEY
+# - HEROKU_APP_NAME
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure required secrets are present
+        run: |
+          : "${{ secrets.HEROKU_API_KEY }}" || { echo "Missing HEROKU_API_KEY"; exit 1; }
+          : "${{ secrets.HEROKU_APP_NAME }}" || { echo "Missing HEROKU_APP_NAME"; exit 1; }
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker login to Heroku Container Registry
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          echo "$HEROKU_API_KEY" | docker login --username=_ --password-stdin registry.heroku.com
+
+      - name: Build and push image to Heroku registry
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          platforms: linux/amd64
+          provenance: false
+          sbom: false
+          tags: |
+            registry.heroku.com/${{ secrets.HEROKU_APP_NAME }}/web
+
+      - name: Install Heroku CLI
+        run: |
+          curl https://cli-assets.heroku.com/install-ubuntu.sh | sh
+
+      - name: Release on Heroku and scale web dyno
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
+        run: |
+          heroku container:release web --app "$HEROKU_APP_NAME"
+          heroku ps:scale web=1 --app "$HEROKU_APP_NAME"
