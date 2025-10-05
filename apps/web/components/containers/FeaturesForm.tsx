@@ -110,9 +110,13 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
   const handleObjectSelection = (row: OIData) =>{
     console.log(row);
     for (const [key, value] of Object.entries(row)) {
-      if (form.getValues(key) === undefined) {
+      // skip few columns
+      if (key === "tfopwg_disp") {
         continue;
       }
+      // if (form.getValues(key) === undefined) {
+      //   continue;
+      // }
       form.setValue(key, String(value));
     }
   };
