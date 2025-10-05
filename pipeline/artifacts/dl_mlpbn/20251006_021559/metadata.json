@@ -1,0 +1,24 @@
+{
+  "pipeline_type": "DL",
+  "model_name": "mlp_bn",
+  "target": "tfopwg_disp",
+  "drop_cols": [
+    "rowid",
+    "toi",
+    "tid",
+    "ctoi_alias",
+    "rastr",
+    "decstr",
+    "toi_created",
+    "rowupdate"
+  ],
+  "classes": [
+    "APC",
+    "CP",
+    "FA",
+    "FP",
+    "KP",
+    "PC"
+  ],
+  "input_dim": 42
+}

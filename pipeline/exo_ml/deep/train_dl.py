@@ -4,27 +4,75 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import joblib
+import matplotlib.pyplot as plt
 
 import tensorflow as tf
 from tensorflow import keras
 
 from ..config import load_config
-from ..data import load_table, basic_clean
+from ..data import load_table
 from ..preprocess import build_preprocessor
 from ..utils import timestamp_dir
 from ..feature_select import drop_bad_columns
 from ..datafix import coerce_numeric
 from .models_keras import build_mlp, build_mlp_bn, build_cnn1d, build_feature_transformer
-def make_optimizer():
-    # Try Keras AdamW (TF >= 2.11), else TFA AdamW, else plain Adam
-    try:
-        return keras.optimizers.AdamW(learning_rate=3e-4, weight_decay=1e-4)
-    except Exception:
-        try:
-            from tensorflow_addons.optimizers import AdamW
-            return AdamW(learning_rate=3e-4, weight_decay=1e-4)
-        except Exception:
-            return keras.optimizers.Adam(learning_rate=3e-4)
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import (
+    accuracy_score, balanced_accuracy_score, precision_recall_fscore_support,
+    classification_report, confusion_matrix
+)
+
+def _save_feature_columns(cols, outdir: Path):
+    (outdir / "feature_columns.json").write_text(json.dumps(list(cols), indent=2))
+
+def _save_metadata(target, drop_cols, classes, outdir: Path, *, arch: str, input_dim: int):
+    meta = {
+        "pipeline_type": "DL",
+        "model_name": arch,
+        "target": target,
+        "drop_cols": drop_cols,
+        "classes": list(classes),
+        "input_dim": int(input_dim)
+    }
+    (outdir / "metadata.json").write_text(json.dumps(meta, indent=2))
+
+def _evaluate_and_save(y_true, y_pred, class_names, outdir: Path, prefix="test"):
+    acc  = accuracy_score(y_true, y_pred)
+    bacc = balanced_accuracy_score(y_true, y_pred)
+    prec_w, rec_w, f1_w, _ = precision_recall_fscore_support(y_true, y_pred, average="weighted", zero_division=0)
+    prec_m, rec_m, f1_m, _ = precision_recall_fscore_support(y_true, y_pred, average="macro", zero_division=0)
+
+    metrics = {
+        "accuracy": acc,
+        "balanced_accuracy": bacc,
+        "precision_weighted": prec_w,
+        "recall_weighted": rec_w,
+        "f1_weighted": f1_w,
+        "precision_macro": prec_m,
+        "recall_macro": rec_m,
+        "f1_macro": f1_m
+    }
+    (outdir / f"{prefix}_metrics.json").write_text(json.dumps(metrics, indent=2))
+
+    report = classification_report(y_true, y_pred, digits=4, target_names=class_names)
+    (outdir / f"{prefix}_classification_report.txt").write_text(report)
+
+    cm = confusion_matrix(y_true, y_pred, labels=range(len(class_names)))
+    fig = plt.figure(figsize=(5.2, 4.6), dpi=140)
+    ax = plt.gca()
+    im = ax.imshow(cm, interpolation="nearest")
+    ax.set_title("Confusion Matrix")
+    ax.set_xlabel("Predicted")
+    ax.set_ylabel("True")
+    ax.set_xticks(range(len(class_names))); ax.set_xticklabels(class_names, rotation=45, ha="right")
+    ax.set_yticks(range(len(class_names))); ax.set_yticklabels(class_names)
+    for (i, j), v in np.ndenumerate(cm):
+        ax.text(j, i, str(v), ha="center", va="center")
+    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(outdir / f"{prefix}_cm.png")
+    plt.close(fig)
 
 def compute_class_weights(y: np.ndarray) -> dict:
     from sklearn.utils.class_weight import compute_class_weight
@@ -44,54 +92,44 @@ def pick_model(arch: str, input_dim: int, n_classes: int):
         return build_feature_transformer(input_dim, n_classes)
     raise ValueError(f"Unknown arch: {arch}")
 
-def penultimate_extractor(model: keras.Model) -> keras.Model:
-    # returns a model that outputs the second-to-last layer activations
-    return keras.Model(inputs=model.input, outputs=model.layers[-2].output)
-
 def main():
-    ap = argparse.ArgumentParser(description="DL for TFOPWG (tabular) with stacking & voting")
+    ap = argparse.ArgumentParser(description="DL for TFOPWG (tabular) — standardized artifacts")
     ap.add_argument("--input", required=True, help="Path to CSV/TSV")
     ap.add_argument("--outdir", default="artifacts", help="Artifacts root directory")
     ap.add_argument("--arch", default="mlp_bn", choices=["mlp_bn","mlp","transformer","cnn1d"], help="DL architecture")
     ap.add_argument("--epochs", type=int, default=100)
     ap.add_argument("--batch-size", type=int, default=256)
     ap.add_argument("--val-size", type=float, default=0.2, help="Validation fraction for holdout")
-    ap.add_argument("--stack-model", default="none", choices=["none","rf","xgb"], help="Train RF/XGB on DL embeddings")
-    ap.add_argument("--vote", action="store_true", help="Enable soft voting (DL + stack)")
-    ap.add_argument("--vote-weights", default="0.7,0.3", help="Weights for voting: DL,stack")
     args = ap.parse_args()
 
     cfg = load_config(None)
     target = cfg["target"]
     drop_cols = cfg["drop_cols"]
 
-    # 1) Load without dropping rows (imputer handles NaNs)
+    # Load
     df = load_table(args.input)
     df = df.dropna(axis="columns", how="all")
-    #df = basic_clean(df)
     if target not in df.columns:
         raise ValueError(f"Target column '{target}' not in input.")
     df = df.drop(columns=[c for c in drop_cols if c in df.columns], errors="ignore")
     df = df[~df[target].isna()].copy()
-    df = df[['pl_rade', 'pl_trandep', 'pl_insol', 'st_pmra', 'st_logg',
-             'st_dist', 'pl_orbper', 'pl_tranmid', 'pl_radeerr1', 'pl_eqt', target]]
-    # NEW: prune junk columns and fix dtypes so numerics become true numerics
+
+    # Optional pruning + dtype fixes (keep your curated subset if you want—removed here for generality)
     df = drop_bad_columns(df, max_missing_pct=0.80, min_unique_ratio=0.0005)
     df = coerce_numeric(df)
-    
+
     # Labels
     y_cat = df[target].astype("category")
     classes = list(y_cat.cat.categories)
     y = y_cat.cat.codes.values.astype("int64")
 
-    # 2) Stratified train/val split
-    from sklearn.model_selection import train_test_split
+    # Split
     X_all = df.drop(columns=[target])
     X_train, X_val, y_train, y_val = train_test_split(
         X_all, y, test_size=args.val_size, stratify=y, random_state=42
     )
 
-    # 3) Preprocessor
+    # Preprocess
     pre = build_preprocessor(X_train)
     X_train_t = pre.fit_transform(X_train)
     X_val_t   = pre.transform(X_val)
@@ -102,16 +140,10 @@ def main():
     input_dim = X_train_t.shape[1]
     n_classes = len(classes)
 
-    # 4) Build DL model
+    # Model
     model = pick_model(args.arch, input_dim, n_classes)
-
-    # 5) Compile with AdamW + ReduceLROnPlateau + EarlyStopping
     optimizer = keras.optimizers.AdamW(learning_rate=3e-4, weight_decay=1e-4)
-    model.compile(
-        optimizer=optimizer,
-        loss=keras.losses.SparseCategoricalCrossentropy(),
-        metrics=["accuracy"]
-    )
+    model.compile(optimizer=optimizer, loss=keras.losses.SparseCategoricalCrossentropy(), metrics=["accuracy"])
 
     cw = compute_class_weights(y_train)
     outdir = timestamp_dir(args.outdir)
@@ -133,77 +165,28 @@ def main():
         verbose=2
     )
 
-    # 6) Evaluate DL on val
-    val_loss, val_acc = model.evaluate(X_val_t, y_val, verbose=0)
-    print({"val_loss": float(val_loss), "val_acc": float(val_acc)})
-
-    # 7) Save DL artifacts
+    # Save DL core artifacts (model + preprocessor)
     joblib.dump(pre, outdir / "preprocessor.joblib")
     model.save(outdir / "dl_model.keras")
-    meta = {
-        "target": target,
-        "drop_cols": drop_cols,
-        "classes": classes,
-        "model_kind": args.arch,
-        "input_dim": int(input_dim),
-    }
-    (outdir / "dl_metadata.json").write_text(json.dumps(meta, indent=2))
 
-    # 8) Optional: DL → RF/XGB (stacking on embeddings)
-    stacked = None
-    if args.stack_model != "none":
-        # build extractor and get embeddings
-        extractor = penultimate_extractor(model)
-        Z_train = extractor.predict(X_train_t, batch_size=512, verbose=0)
-        Z_val   = extractor.predict(X_val_t,   batch_size=512, verbose=0)
+    # Standardized eval bundle (on validation split)
+    y_val_pred_idx = np.argmax(model.predict(X_val_t, verbose=0), axis=1)
+    _save_feature_columns(X_all.columns.tolist(), outdir)
+    _save_metadata(target, drop_cols, classes, outdir, arch=args.arch, input_dim=input_dim)
+    _evaluate_and_save(y_val, y_val_pred_idx, [str(c) for c in classes], outdir, prefix="test")
 
-        if args.stack_model == "rf":
-            from sklearn.ensemble import RandomForestClassifier
-            stacked = RandomForestClassifier(
-                n_estimators=500, max_depth=None, min_samples_leaf=1,
-                class_weight="balanced_subsample", random_state=42, n_jobs=-1
-            )
-        else:  # xgb
-            try:
-                from xgboost import XGBClassifier
-                stacked = XGBClassifier(
-                    n_estimators=600, max_depth=6, learning_rate=0.07,
-                    subsample=0.9, colsample_bytree=0.9, objective="multi:softprob",
-                    eval_metric="mlogloss", random_state=42, tree_method="hist"
-                )
-            except Exception as e:
-                raise RuntimeError("Install xgboost to use --stack-model xgb") from e
+    # predictions.csv (val set) with probabilities
+    proba = model.predict(X_val_t, verbose=0)
+    pred_label = [classes[i] for i in y_val_pred_idx]
+    pred_df = X_val.copy()
+    pred_df["true_label"] = y_val
+    pred_df["pred_label"] = pred_label
+    for i, c in enumerate(classes):
+        pred_df[f"proba_{c}"] = proba[:, i]
+    pred_df.to_csv(outdir / "predictions.csv", index=False)
 
-        stacked.fit(Z_train, y_train)
-        # save the stacker and extractor
-        joblib.dump(stacked, outdir / f"stack_{args.stack_model}.joblib")
-        extractor.save(outdir / "dl_extractor.keras")
-
-        # 9) Soft voting if requested
-        if args.vote:
-            # DL probs
-            p_dl = model.predict(X_val_t, verbose=0)
-            # Stacker probs
-            p_st = stacked.predict_proba(Z_val)
-            w_dl, w_st = [float(x) for x in args.vote_weights.split(",")]
-            p_vote = w_dl * p_dl + w_st * p_st
-            y_pred = p_vote.argmax(1)
-
-            # Save ensemble probs
-            np.save(outdir / "val_probs_dl.npy", p_dl)
-            np.save(outdir / "val_probs_stack.npy", p_st)
-            np.save(outdir / "val_probs_vote.npy", p_vote)
-
-            from sklearn.metrics import accuracy_score, balanced_accuracy_score, classification_report
-            print("Voting val acc:", accuracy_score(y_val, y_pred))
-            print("Voting val bal-acc:", balanced_accuracy_score(y_val, y_pred))
-            (outdir / "voting_report.txt").write_text(
-                classification_report(y_val, y_pred, digits=4, target_names=classes)
-            )
-
-    # 10) Plots
+    # (Optional) training curves — names unchanged
     try:
-        import matplotlib.pyplot as plt
         acc = hist.history.get("accuracy", [])
         val_acc_hist = hist.history.get("val_accuracy", [])
         loss = hist.history.get("loss", [])
@@ -213,7 +196,7 @@ def main():
     except Exception as e:
         (outdir / "plot_warn.txt").write_text(str(e))
 
-    print(f"Saved DL (and stackers if any) to: {outdir.resolve()}")
+    print(f"Saved DL run to: {outdir.resolve()}")
 
 if __name__ == "__main__":
     main()
