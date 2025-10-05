@@ -10,6 +10,8 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  Row,
+  Table as TanStackTable,
   SortingState,
   useReactTable,
   VisibilityState,
@@ -68,7 +70,7 @@ export type FeaturesMap = Map<keyof OIData, FeatureDetails>;
 
 const features: FeaturesMap = new Map([
   ["toipfx", { shortname: "Pref." }],
-  ["pl_pnum", { shortname: "Pl. Num." }],
+  ["pl_pnum", { shortname: "Pl." }],
   ["tfopwg_disp", { shortname: "Disp." }],
   ["ra", { shortname: "RA" }],
   ["dec", { shortname: "Dec" }],
@@ -76,42 +78,15 @@ const features: FeaturesMap = new Map([
   ["st_pmraerr1", { shortname: "PMRA Err1" }],
   ["st_pmraerr2", { shortname: "PMRA Err2" }],
   ["st_pmralim", { shortname: "PMRA Lim" }],
-])
+]);
 
-export const columns: ColumnDef<OIData>[] = [
-  {
-    id: "select",
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  ...features.entries().map(([key, obj]) => ({
-    accessorKey: key,
-    header: ({ column }: { column: Column<OIData, unknown> }) => {
-      return (
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          { obj.shortname ? obj.shortname : key}
-          { !!column.getIsSorted() && <ArrowUpDown /> }
-        </Button>
-      )
-    },
-    // I'm just a human
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    cell: ({ row }: { row: any }) => <div className="lowercase">{row.getValue(key)}</div>,
-  })),
-]
+export type Props = {
+  onSelect: (row: OIData) => void,
+}
 
-const ObjectsTable: React.FC = () => {
+const ObjectsTable: React.FC<Props> = ({
+  onSelect,
+}) => {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -119,6 +94,44 @@ const ObjectsTable: React.FC = () => {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+
+  const handleCheckedChange = (row: Row<OIData>, table: TanStackTable<OIData>) => {
+    table.setRowSelection({ [row.id]: true });
+    onSelect(row.original);
+  };
+
+  const columns: ColumnDef<OIData>[] = [
+    {
+      id: "select",
+      cell: ({ row, table }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={() => handleCheckedChange(row, table)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    ...features.entries().map(([key, obj]) => ({
+      accessorKey: key,
+      header: ({ column }: { column: Column<OIData, unknown> }) => {
+        return (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            { obj.shortname ? obj.shortname : key}
+            { !!column.getIsSorted() && <ArrowUpDown /> }
+          </Button>
+        )
+      },
+      // I'm just a human
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      cell: ({ row }: { row: any }) => <div className="lowercase">{row.getValue(key)}</div>,
+    })),
+  ]
 
   const table = useReactTable({
     data,
@@ -131,6 +144,8 @@ const ObjectsTable: React.FC = () => {
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    enableRowSelection: true,
+    enableMultiRowSelection: false,
     state: {
       sorting,
       columnFilters,
