@@ -105,7 +105,9 @@ export const columns: ColumnDef<OIData>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => <div className="lowercase">{row.getValue(key)}</div>,
+    // I'm just a human
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    cell: ({ row }: { row: any }) => <div className="lowercase">{row.getValue(key)}</div>,
   })),
 ]
 
