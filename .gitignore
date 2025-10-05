@@ -2,3 +2,5 @@
 # we have a separate ones in apps/, pipelines/, etc.
 
 .idea/
+
+__pycache__/
