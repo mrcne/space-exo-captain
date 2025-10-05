@@ -1,0 +1,24 @@
+{
+  "target": "tfopwg_disp",
+  "drop_cols": [
+    "rowid",
+    "toi",
+    "tid",
+    "ctoi_alias",
+    "rastr",
+    "decstr",
+    "toi_created",
+    "rowupdate"
+  ],
+  "classes": [
+    "APC",
+    "CP",
+    "FA",
+    "FP",
+    "KP",
+    "PC"
+  ],
+  "created_at": "2025-10-06 01:16:20",
+  "sklearn_version": "1.7.2",
+  "notes": "RF pipeline with scaling+OHE"
+}
