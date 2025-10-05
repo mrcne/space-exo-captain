@@ -18,6 +18,8 @@ export default function Home() {
           />
         </div>
         <p>Welcome traveller! The goal is of this app is to let anyone open a browser, paste or upload feature values, and get a classification back.</p>
+        <br />
+        <p><a href="https://github.com/mrcne/space-exo-captain">GitHub Repository</a></p>
       </main>
     </div>
   );
