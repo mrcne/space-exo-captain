@@ -5,8 +5,9 @@ version: '3.8'
 services:
   fastapi:
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+      # because we want to include artifacts from the pipeline directory
+      context: ./
+      dockerfile: ./apps/api/Dockerfile
     ports:
       - "8000:8000"
     volumes:

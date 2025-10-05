@@ -13,11 +13,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # install dependencies first for better layer caching
-COPY requirements.txt /app/requirements.txt
+COPY ./apps/api/requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip && \
     pip install -r /app/requirements.txt
 
-COPY . /app
+COPY ./apps/api/ /app
+
+COPY ./pipeline/artifacts /app/artifacts
 
 # expose is optional for Heroku - useful for local runs
 EXPOSE 8000

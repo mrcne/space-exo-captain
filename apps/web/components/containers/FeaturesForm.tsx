@@ -25,7 +25,7 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
   const FeaturesSchema = z.record(z.string(), z.string().min(1, fieldIsRequiredError));
 
   const defaultValues = featureColumns.reduce<Record<string, string>>((acc, column) => {
-    acc[column] = '';
+    acc[column] = '1';
     return acc;
   }, {});
   const form = useForm<FeaturesInput>({
