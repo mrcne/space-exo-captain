@@ -2,7 +2,7 @@
 
 import ChoiceboxList, {Choice} from "@/components/components/ChoiceboxList";
 import MobiDrawer from "@/components/components/MobiDrawer";
-import ObjectsTable from "@/components/components/ObjectsTable";
+import ObjectsTable, {OIData} from "@/components/components/ObjectsTable";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -107,6 +107,20 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
     }
   };
 
+  const handleObjectSelection = (row: OIData) =>{
+    console.log(row);
+    for (const [key, value] of Object.entries(row)) {
+      // skip few columns
+      if (key === "tfopwg_disp") {
+        continue;
+      }
+      // if (form.getValues(key) === undefined) {
+      //   continue;
+      // }
+      form.setValue(key, String(value));
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -134,7 +148,10 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
         </MobiDrawer>
 
         <MobiDrawer open={rightOpen} onOpenChange={setRightOpen} title="Objects database" variant="right">
-          <ObjectsTable />
+          <ObjectsTable
+            onSelect={handleObjectSelection}
+            minimal
+          />
         </MobiDrawer>
       </form>
     </Form>
