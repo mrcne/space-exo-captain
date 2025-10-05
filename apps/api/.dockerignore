@@ -1,1 +1,24 @@
-.git/
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.env
+.venv
+.env*
+venv/
+
+# Git
+.git
+.gitignore
+
+# Caches
+.cache/
+.mypy_cache/
+pytest_cache/
+
+# Logs
+*.log
