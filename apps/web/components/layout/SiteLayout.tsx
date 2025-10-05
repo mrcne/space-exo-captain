@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Menu, X, Home, Compass, Search } from "lucide-react";
+import {Menu, X, Home, Compass, Search, BotMessageSquare} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -61,6 +61,7 @@ const SiteLayout = ({ children }: { children: React.ReactNode }) => {
                     <NavLink href="/" label="Home" icon={Home} />
                     <NavLink href="/explore" label="Explore" icon={Compass} />
                     <NavLink href="/investigate" label="Investigate" icon={Search} />
+                    <NavLink href="/chat" label="Chat" icon={BotMessageSquare} />
                   </nav>
                 </Dialog.Content>
               </Dialog.Portal>
@@ -81,6 +82,7 @@ const SiteLayout = ({ children }: { children: React.ReactNode }) => {
             <NavLink href="/" label="Home" icon={Home} />
             <NavLink href="/explore" label="Explore" icon={Compass} />
             <NavLink href="/investigate" label="Investigate" icon={Search} />
+            <NavLink href="/chat" label="Chat" icon={BotMessageSquare} />
           </nav>
         </aside>
 
