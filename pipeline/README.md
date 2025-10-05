@@ -68,3 +68,27 @@ See `configs/config.json` for overridable options:
 - If you export from the NASA site with '#' metadata lines, the loader will handle it if it's TSV. For direct, clean CSV, consider NASA TAP: `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+*+from+toi&format=csv`.
 ```
 
+## Deep Learning (Keras) for Tabular TOI data
+
+Three ready models:
+- `mlp` — dense MLP baseline
+- `cnn1d` — 1D Conv over feature sequence
+- `transformer` — lightweight feature-wise Transformer
+
+### Train DL
+```bash
+python -m exo_ml.deep.train_dl --input data/TOI_train.csv --outdir artifacts --model mlp
+python -m exo_ml.deep.train_dl --input data/TOI_train.csv --outdir artifacts --model cnn1d
+python -m exo_ml.deep.train_dl --input data/TOI_train.csv --outdir artifacts --model transformer
+```
+
+Artifacts include:
+- `preprocessor.joblib`  (fitted ColumnTransformer)
+- `dl_model.keras`       (Keras model)
+- `dl_metadata.json`
+- `dl_accuracy.png`, `dl_loss.png`
+
+### Inference DL
+```bash
+python -m exo_ml.deep.infer_dl --input data/new_unseen.csv --artifacts artifacts/2025XXXX_XXXXXX
+```
