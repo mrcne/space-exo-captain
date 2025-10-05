@@ -1,5 +1,6 @@
 "use client"
 
+import ChoiceboxList, {Choice} from "@/components/components/ChoiceboxList";
 import MobiDrawer from "@/components/components/MobiDrawer";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
@@ -43,6 +44,18 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
     label: string;
     description?: string;
   };
+
+  const modelsList: Choice[] = [
+    { id: "20251005_021226", label: "Toss a coin", subtitle: "Accuracy: ...", description: "Not very accurate" },
+    { id: "unnown2", label: "Unknown2", subtitle: "?", description: "404 model not found" },
+    { id: "unnown3", label: "Unknown3", subtitle: "?", description: "404 model not found" },
+    { id: "unnown4", label: "Unknown4", subtitle: "?", description: "404 model not found" },
+    { id: "unnown5", label: "Unknown5", subtitle: "?", description: "404 model not found" },
+    { id: "unnown6", label: "Unknown6", subtitle: "?", description: "404 model not found" },
+    { id: "unnown7", label: "Unknown7", subtitle: "?", description: "404 model not found" },
+    { id: "unnown9", label: "Unknown9", subtitle: "?", description: "404 model not found" },
+    { id: "unnown10", label: "Unknown10", subtitle: "?", description: "404 model not found" },
+  ];
 
   const FeatureField = ({ name, label, description }: FeatureFieldProps) => {
     return (
@@ -97,7 +110,7 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="md:pl-80 md:pr-80">
-          <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="mb-4 flex items-center justify-between gap-2 md:hidden">
               <Button variant="outline" type="button" onClick={ () => setLeftOpen(true) }>Left options</Button>
               <Button variant="outline" type="button" onClick={ () => setRightOpen(true) }>Right options</Button>
           </div>
@@ -115,7 +128,7 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
         </div>
 
         <MobiDrawer open={leftOpen} onOpenChange={setLeftOpen} title="Model settings" variant="left">
-          left drawer
+          <ChoiceboxList options={modelsList} onValueChange={() => {}} />
         </MobiDrawer>
 
         <MobiDrawer open={rightOpen} onOpenChange={setRightOpen} title="Objects database" variant="right">
