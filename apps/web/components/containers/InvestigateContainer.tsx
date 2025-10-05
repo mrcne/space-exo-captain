@@ -12,7 +12,8 @@ import * as React from "react";
 
 const InvestigateContainer: React.FC = () => {
  	const [resultOpen, setResultOpen] = React.useState(false);
-	const [resultData, setResultData] = React.useState('unknown');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const [resultData, setResultData] = React.useState<any>({});
 
   const SuccessAlert = () => {
     return (
@@ -21,7 +22,7 @@ const InvestigateContainer: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Model results</AlertDialogTitle>
             <AlertDialogDescription>
-              {JSON.stringify(resultData)}
+              Classification: {resultData?.prediction ?? 'unknown'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
