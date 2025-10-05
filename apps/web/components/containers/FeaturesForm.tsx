@@ -1,5 +1,6 @@
 "use client"
 
+import MobiDrawer from "@/components/components/MobiDrawer";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -9,8 +10,6 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as Dialog from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
 
 // @TODO: serve definitions from API
 import featureColumns from "../../data/feature_columns.json";
@@ -99,45 +98,8 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="md:pl-80 md:pr-80">
           <div className="mb-4 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 md:hidden">
-              <Dialog.Root open={leftOpen} onOpenChange={setLeftOpen}>
-                <Dialog.Trigger asChild>
-                  <Button variant="outline" type="button">Left options</Button>
-                </Dialog.Trigger>
-                <Dialog.Portal>
-                  <Dialog.Overlay className="fixed inset-0 bg-black/40 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 md:hidden" />
-                  <Dialog.Content className="fixed inset-y-0 left-0 z-50 w-80 translate-x-[-100%] bg-card p-4 shadow-lg outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-left data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:translate-x-0 md:hidden">
-                    <div className="flex items-center justify-between pb-2">
-                      <Dialog.Title className="text-base font-semibold">Model settings</Dialog.Title>
-                      <Dialog.Close asChild>
-                        <button aria-label="Close" className="rounded-md p-2 hover:bg-accent">
-                          <X className="h-5 w-5" />
-                        </button>
-                      </Dialog.Close>
-                    </div>
-                  </Dialog.Content>
-                </Dialog.Portal>
-              </Dialog.Root>
-
-              <Dialog.Root open={rightOpen} onOpenChange={setRightOpen}>
-                <Dialog.Trigger asChild>
-                  <Button variant="outline" type="button">Right options</Button>
-                </Dialog.Trigger>
-                <Dialog.Portal>
-                  <Dialog.Overlay className="fixed inset-0 bg-black/40 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 md:hidden" />
-                  <Dialog.Content className="fixed inset-y-0 right-0 z-50 w-80 translate-x-[100%] bg-card p-4 shadow-lg outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-right data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:translate-x-0 md:hidden">
-                    <div className="flex items-center justify-between pb-2">
-                      <Dialog.Title className="text-base font-semibold">Objects database</Dialog.Title>
-                      <Dialog.Close asChild>
-                        <button aria-label="Close" className="rounded-md p-2 hover:bg-accent">
-                          <X className="h-5 w-5" />
-                        </button>
-                      </Dialog.Close>
-                    </div>
-                  </Dialog.Content>
-                </Dialog.Portal>
-              </Dialog.Root>
-            </div>
+              <Button variant="outline" type="button" onClick={ () => setLeftOpen(true) }>Left options</Button>
+              <Button variant="outline" type="button" onClick={ () => setRightOpen(true) }>Right options</Button>
           </div>
 
           <FieldGroup>
@@ -152,19 +114,13 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
           </Button>
         </div>
 
-        <div className="hidden md:block">
-          <aside className="fixed left-[220px] top-14 bottom-0 z-30 w-80 border-r bg-card p-4 shadow-sm">
-            <div className="pb-2">
-              <div className="text-base font-semibold">Model Settings</div>
-            </div>
-          </aside>
+        <MobiDrawer open={leftOpen} onOpenChange={setLeftOpen} title="Model settings" variant="left">
+          left drawer
+        </MobiDrawer>
 
-          <aside className="fixed right-0 top-14 bottom-0 z-30 w-80 border-l bg-card p-4 shadow-sm">
-            <div className="pb-2">
-              <div className="text-base font-semibold">Objects database</div>
-            </div>
-          </aside>
-        </div>
+        <MobiDrawer open={rightOpen} onOpenChange={setRightOpen} title="Objects database" variant="right">
+          right drawer
+        </MobiDrawer>
       </form>
     </Form>
   );
