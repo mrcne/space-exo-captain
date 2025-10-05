@@ -9,6 +9,8 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import * as Dialog from "@radix-ui/react-dialog";
+import { X } from "lucide-react";
 
 // @TODO: serve definitions from API
 import featureColumns from "../../data/feature_columns.json";
@@ -33,6 +35,9 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
     defaultValues,
     mode: "onSubmit",
   });
+
+  const [leftOpen, setLeftOpen] = React.useState(false);
+  const [rightOpen, setRightOpen] = React.useState(false);
 
   type FeatureFieldProps = {
     name: keyof FeaturesInput;
@@ -91,18 +96,76 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <FieldGroup>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            { featureColumns.map((column) => (
-              <FeatureField key={column} name={column} label={column}/>
-            ))}
+      <div className="md:pl-80 md:pr-80">
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 md:hidden">
+              <Dialog.Root open={leftOpen} onOpenChange={setLeftOpen}>
+                <Dialog.Trigger asChild>
+                  <Button variant="outline" type="button">Left options</Button>
+                </Dialog.Trigger>
+                <Dialog.Portal>
+                  <Dialog.Overlay className="fixed inset-0 bg-black/40 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 md:hidden" />
+                  <Dialog.Content className="fixed inset-y-0 left-0 z-50 w-80 translate-x-[-100%] bg-card p-4 shadow-lg outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-left data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:translate-x-0 md:hidden">
+                    <div className="flex items-center justify-between pb-2">
+                      <Dialog.Title className="text-base font-semibold">Model settings</Dialog.Title>
+                      <Dialog.Close asChild>
+                        <button aria-label="Close" className="rounded-md p-2 hover:bg-accent">
+                          <X className="h-5 w-5" />
+                        </button>
+                      </Dialog.Close>
+                    </div>
+                  </Dialog.Content>
+                </Dialog.Portal>
+              </Dialog.Root>
+
+              <Dialog.Root open={rightOpen} onOpenChange={setRightOpen}>
+                <Dialog.Trigger asChild>
+                  <Button variant="outline" type="button">Right options</Button>
+                </Dialog.Trigger>
+                <Dialog.Portal>
+                  <Dialog.Overlay className="fixed inset-0 bg-black/40 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 md:hidden" />
+                  <Dialog.Content className="fixed inset-y-0 right-0 z-50 w-80 translate-x-[100%] bg-card p-4 shadow-lg outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-right data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:translate-x-0 md:hidden">
+                    <div className="flex items-center justify-between pb-2">
+                      <Dialog.Title className="text-base font-semibold">Objects database</Dialog.Title>
+                      <Dialog.Close asChild>
+                        <button aria-label="Close" className="rounded-md p-2 hover:bg-accent">
+                          <X className="h-5 w-5" />
+                        </button>
+                      </Dialog.Close>
+                    </div>
+                  </Dialog.Content>
+                </Dialog.Portal>
+              </Dialog.Root>
+            </div>
           </div>
-        </FieldGroup>
-        <Button className="mt-4 float-right" type="submit" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? "Submitting..." : "Check classification"}
-        </Button>
-      </form>
+
+          <FieldGroup>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              { featureColumns.map((column) => (
+                <FeatureField key={column} name={column} label={column}/>
+              ))}
+            </div>
+          </FieldGroup>
+          <Button className="mt-4 float-right" type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? "Submitting..." : "Check classification"}
+          </Button>
+        </form>
+      </div>
+
+      <div className="hidden md:block">
+        <aside className="fixed left-[220px] top-14 bottom-0 z-30 w-80 border-r bg-card p-4 shadow-sm">
+          <div className="pb-2">
+            <div className="text-base font-semibold">Model Settings</div>
+          </div>
+        </aside>
+
+        <aside className="fixed right-0 top-14 bottom-0 z-30 w-80 border-l bg-card p-4 shadow-sm">
+          <div className="pb-2">
+            <div className="text-base font-semibold">Objects database</div>
+          </div>
+        </aside>
+      </div>
     </Form>
   );
 }
