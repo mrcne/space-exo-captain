@@ -156,8 +156,8 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div>
           <div className="mb-4 flex items-center justify-between gap-2 md:hidden">
-              <Button variant="outline" type="button" onClick={ () => setLeftOpen(true) }>Left options</Button>
-              <Button variant="outline" type="button" onClick={ () => setRightOpen(true) }>Right options</Button>
+              <Button variant="outline" type="button" onClick={ () => setLeftOpen(true) }>Select model</Button>
+              <Button variant="outline" type="button" onClick={ () => setRightOpen(true) }>Select data</Button>
           </div>
 
           <FieldGroup>
