@@ -29,22 +29,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-const data: OIData[] = [
-  { toipfx: 2018, pl_pnum: 1, tfopwg_disp: "CP", ra: 142.173446, dec: -12.167165, st_pmra: 0.105, st_pmraerr1: 0.0, st_pmraerr2: 0.0, st_pmralim: 0.0, st_pmrasymerr: 0.0 },
-  { toipfx: 1217, pl_pnum: 1, tfopwg_disp: "PC", ra: 45.462478, dec: -16.594496, st_pmra: 0.14, st_pmraerr1: 0.0, st_pmraerr2: 0.0, st_pmralim: 0.0, st_pmrasymerr: 0.0 },
-  { toipfx: 4937, pl_pnum: 1, tfopwg_disp: "PC", ra: 207.66961, dec: -48.807654, st_pmra: 0.093, st_pmraerr1: 0.0, st_pmraerr2: 0.0, st_pmralim: 0.0, st_pmrasymerr: 0.0 },
-  { toipfx: 4581, pl_pnum: 1, tfopwg_disp: "KP", ra: 297.333072, dec: 41.891119, st_pmra: 0.038, st_pmraerr1: 0.0, st_pmraerr2: 0.0, st_pmralim: 0.0, st_pmrasymerr: 0.0 },
-  { toipfx: 5016, pl_pnum: 1, tfopwg_disp: "FP", ra: 236.159176, dec: -58.128314, st_pmra: 0.029, st_pmraerr1: 0.0, st_pmraerr2: 0.0, st_pmralim: 0.0, st_pmrasymerr: 0.0 },
-  { toipfx: 620, pl_pnum: 1, tfopwg_disp: "CP", ra: 142.173446, dec: -12.167165, st_pmra: 0.105, st_pmraerr1: 0.0, st_pmraerr2: 0.0, st_pmralim: 0.0, st_pmrasymerr: 0.0 },
-  { toipfx: 455, pl_pnum: 1, tfopwg_disp: "CP", ra: 45.462478, dec: -16.594496, st_pmra: 0.14, st_pmraerr1: 0.0, st_pmraerr2: 0.0, st_pmralim: 0.0, st_pmrasymerr: 0.0 },
-  { toipfx: 7487, pl_pnum: 1, tfopwg_disp: "KP", ra: 351.135378, dec: -5.164145, st_pmra: 0.063, st_pmraerr1: 0.0, st_pmraerr2: 0.0, st_pmralim: 0.0, st_pmrasymerr: 0.0 },
-  { toipfx: 5139, pl_pnum: 1, tfopwg_disp: "PC", ra: 153.384453, dec: 19.948217, st_pmra: 0.053, st_pmraerr1: 0.0, st_pmraerr2: 0.0, st_pmralim: 0.0, st_pmrasymerr: 0.0 },
-  { toipfx: 3300, pl_pnum: 1, tfopwg_disp: "PC", ra: 246.034734, dec: -82.550772, st_pmra: 0.031, st_pmraerr1: 0.0, st_pmraerr2: 0.0, st_pmralim: 0.0, st_pmrasymerr: 0.0 },
-  { toipfx: 1563, pl_pnum: 1, tfopwg_disp: "PC", ra: 38.810203, dec: 48.273763, st_pmra: 0.083, st_pmraerr1: 0.0, st_pmraerr2: 0.0, st_pmralim: 0.0, st_pmrasymerr: 0.0 },
-  { toipfx: 1897, pl_pnum: 1, tfopwg_disp: "FP", ra: 48.370422, dec: 75.268379, st_pmra: 0.042, st_pmraerr1: 0.0, st_pmraerr2: 0.0, st_pmralim: 0.0, st_pmrasymerr: 0.0 },
-  { toipfx: 3908, pl_pnum: 1, tfopwg_disp: "APC", ra: 206.782929, dec: 42.736035, st_pmra: 0.082, st_pmraerr1: 0.0, st_pmraerr2: 0.0, st_pmralim: 0.0, st_pmrasymerr: 0.0}
-];
-
+import testingData from "../../data/pipeline/data/testing.json";
+const data: OIData[] = (testingData as unknown as OIData[]);
 
 export type Disposition = string;
 
@@ -144,13 +130,13 @@ export type FeatureDetails = {
 export type FeaturesRecord = Record<keyof OIData, FeatureDetails>;
 export type FeaturesMap = Map<keyof OIData, FeatureDetails>;
 
-const features: FeaturesMap = new Map([
+const featuresFull: FeaturesMap = new Map([
+  ["tfopwg_disp", { name: "TFOPWG Disposition", shortname: "Disp." }],
   ["toi", { name: "TESS Object of Interest", shortname: "TOI" }],
   ["toipfx", { name: "TESS Object of Interest Prefix", shortname: "TOI Pfx" }],
   ["tid", { name: "TESS Input Catalog ID", shortname: "TIC ID" }],
   ["ctoi_alias", { name: "Community TESS Object of Interest Alias", shortname: "CTOI" }],
   ["pl_pnum", { name: "Number of Planet Candidates", shortname: "Pl.#" }],
-  ["tfopwg_disp", { name: "TFOPWG Disposition", shortname: "Disp." }],
   ["rastr", { name: "RA [sexagesimal]", shortname: "RA (sex)" }],
   ["ra", { name: "RA [deg]", shortname: "RA" }],
   ["decstr", { name: "Dec [sexagesimal]", shortname: "Dec (sex)" }],
@@ -173,12 +159,20 @@ const features: FeaturesMap = new Map([
   ["rowupdate", { name: "Date of Last Update", shortname: "Updated" }],
 ]);
 
+const featuresMini: FeaturesMap = new Map([
+  ["tfopwg_disp", { name: "TFOPWG Disposition", shortname: "Di." }],
+  ["pl_orbper", { name: "Planet Orbital Period [days]", shortname: "Per." }],
+  ["pl_trandurh", { name: "Planet Transit Duration [hours]", shortname: "Dur." }],
+]);
+
 export type Props = {
   onSelect: (row: OIData) => void,
+  minimal?: boolean,
 }
 
 const ObjectsTable: React.FC<Props> = ({
   onSelect,
+  minimal = false,
 }) => {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -192,6 +186,8 @@ const ObjectsTable: React.FC<Props> = ({
     table.setRowSelection({ [row.id]: true });
     onSelect(row.original);
   };
+
+  const features = minimal ? featuresMini : featuresFull;
 
   const columns: ColumnDef<OIData>[] = [
     {
@@ -298,6 +294,26 @@ const ObjectsTable: React.FC<Props> = ({
             )}
           </TableBody>
         </Table>
+      </div>
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          Previous
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Next
+        </Button>
       </div>
     </div>
   )
