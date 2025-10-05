@@ -71,6 +71,8 @@ def main():
         raise ValueError(f"Target column '{target}' not in input.")
     df = df.drop(columns=[c for c in drop_cols if c in df.columns], errors="ignore")
     df = df[~df[target].isna()].copy()
+    # df = df[['pl_rade', 'pl_trandep', 'pl_insol', 'st_pmra', 'st_logg',
+    #          'st_dist', 'pl_orbper', 'pl_tranmid', 'pl_radeerr1', 'pl_eqt', target]]
 
     # Labels
     y_cat = df[target].astype("category")
