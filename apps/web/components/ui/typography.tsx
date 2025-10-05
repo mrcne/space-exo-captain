@@ -7,7 +7,7 @@ export const H1: React.FC<Props> = ({ className, ...props }) => (
   <h1
     data-slot="h1"
     className={cn(
-      "scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance",
+      "scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance mb-3",
       className
     )}
     {...props}
@@ -18,7 +18,7 @@ export const H2: React.FC<Props> = ({ className, ...props }) => (
   <h2
     data-slot="h2"
     className={cn(
-      "scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0",
+      "scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0 mb-3",
       className
     )}
     {...props}

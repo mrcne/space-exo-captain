@@ -2,6 +2,7 @@
 
 import ChoiceboxList, {Choice} from "@/components/components/ChoiceboxList";
 import MobiDrawer from "@/components/components/MobiDrawer";
+import ObjectsTable from "@/components/components/ObjectsTable";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -109,7 +110,7 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="md:pl-80 md:pr-80">
+        <div>
           <div className="mb-4 flex items-center justify-between gap-2 md:hidden">
               <Button variant="outline" type="button" onClick={ () => setLeftOpen(true) }>Left options</Button>
               <Button variant="outline" type="button" onClick={ () => setRightOpen(true) }>Right options</Button>
@@ -127,12 +128,13 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
           </Button>
         </div>
 
+        {/* @TODO: move to React Portals */}
         <MobiDrawer open={leftOpen} onOpenChange={setLeftOpen} title="Model settings" variant="left">
           <ChoiceboxList options={modelsList} onValueChange={() => {}} />
         </MobiDrawer>
 
         <MobiDrawer open={rightOpen} onOpenChange={setRightOpen} title="Objects database" variant="right">
-          right drawer
+          <ObjectsTable />
         </MobiDrawer>
       </form>
     </Form>
