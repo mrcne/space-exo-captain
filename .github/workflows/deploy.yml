@@ -1,4 +1,4 @@
-name: Build and Deploy API to Heroku (Heroku registry only)
+name: Build docker, Push to Registry and Deploy to Heroku
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
           file: apps/api/Dockerfile
           push: true
           tags: |
-            registry.heroku.com/${{ secrets.HEROKU_APP_NAME }}/web
+            registry.heroku.com/${{ secrets.HEROKU_APP_NAME }}/api
 
       - name: Install Heroku CLI
         run: |
@@ -46,4 +46,4 @@ jobs:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
         run: |
-          heroku container:release web --app "$HEROKU_APP_NAME"
+          heroku container:release api --app "$HEROKU_APP_NAME"
