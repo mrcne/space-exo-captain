@@ -77,9 +77,10 @@ Three ready models:
 
 ### Train DL
 ```bash
-python -m exo_ml.deep.train_dl --input data/TOI_train.csv --outdir artifacts --model mlp
-python -m exo_ml.deep.train_dl --input data/TOI_train.csv --outdir artifacts --model cnn1d
-python -m exo_ml.deep.train_dl --input data/TOI_train.csv --outdir artifacts --model transformer
+python -m exo_ml.deep.train_dl --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts --arch mlp_bn
+python -m exo_ml.deep.train_dl --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts --arch mlp_bn --stack-model xgb
+python -m exo_ml.deep.train_dl --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts --arch mlp_bn --stack-model xgb --vote --vote-weights 0.7,0.3
+python -m exo_ml.deep.tabnet_train --input data/TOI_2025.10.03_10.51.46.csv --outdir artifacts
 ```
 
 Artifacts include:
