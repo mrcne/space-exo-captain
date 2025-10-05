@@ -2,7 +2,7 @@ name: Build and Deploy API to Heroku (Heroku registry only)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, apps-api-hosting ]
   workflow_dispatch:
 
 permissions:
