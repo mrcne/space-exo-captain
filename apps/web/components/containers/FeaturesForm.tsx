@@ -1,5 +1,8 @@
 "use client"
 
+import ChoiceboxList, {Choice} from "@/components/components/ChoiceboxList";
+import MobiDrawer from "@/components/components/MobiDrawer";
+import ObjectsTable from "@/components/components/ObjectsTable";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -34,11 +37,26 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
     mode: "onSubmit",
   });
 
+  const [leftOpen, setLeftOpen] = React.useState(false);
+  const [rightOpen, setRightOpen] = React.useState(false);
+
   type FeatureFieldProps = {
     name: keyof FeaturesInput;
     label: string;
     description?: string;
   };
+
+  const modelsList: Choice[] = [
+    { id: "20251005_021226", label: "Toss a coin", subtitle: "Accuracy: ...", description: "Not very accurate" },
+    { id: "unnown2", label: "Unknown2", subtitle: "?", description: "404 model not found" },
+    { id: "unnown3", label: "Unknown3", subtitle: "?", description: "404 model not found" },
+    { id: "unnown4", label: "Unknown4", subtitle: "?", description: "404 model not found" },
+    { id: "unnown5", label: "Unknown5", subtitle: "?", description: "404 model not found" },
+    { id: "unnown6", label: "Unknown6", subtitle: "?", description: "404 model not found" },
+    { id: "unnown7", label: "Unknown7", subtitle: "?", description: "404 model not found" },
+    { id: "unnown9", label: "Unknown9", subtitle: "?", description: "404 model not found" },
+    { id: "unnown10", label: "Unknown10", subtitle: "?", description: "404 model not found" },
+  ];
 
   const FeatureField = ({ name, label, description }: FeatureFieldProps) => {
     return (
@@ -49,7 +67,7 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
           <FormItem>
             <FormLabel>{label}</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <Input type="number" {...field} />
             </FormControl>
             { !!description && <FormDescription>{description}</FormDescription> }
             <FormMessage/>
@@ -92,14 +110,32 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <FieldGroup>
-          { featureColumns.map((column) => (
-            <FeatureField key={column} name={column} label={column}/>
-          ))}
-        </FieldGroup>
-        <Button className="mt-4 float-right" type="submit" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? "Submitting..." : "Check classification"}
-        </Button>
+        <div>
+          <div className="mb-4 flex items-center justify-between gap-2 md:hidden">
+              <Button variant="outline" type="button" onClick={ () => setLeftOpen(true) }>Left options</Button>
+              <Button variant="outline" type="button" onClick={ () => setRightOpen(true) }>Right options</Button>
+          </div>
+
+          <FieldGroup>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              { featureColumns.map((column) => (
+                <FeatureField key={column} name={column} label={column}/>
+              ))}
+            </div>
+          </FieldGroup>
+          <Button className="mt-4 float-right" type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? "Submitting..." : "Check classification"}
+          </Button>
+        </div>
+
+        {/* @TODO: move to React Portals */}
+        <MobiDrawer open={leftOpen} onOpenChange={setLeftOpen} title="Model settings" variant="left">
+          <ChoiceboxList options={modelsList} onValueChange={() => {}} />
+        </MobiDrawer>
+
+        <MobiDrawer open={rightOpen} onOpenChange={setRightOpen} title="Objects database" variant="right">
+          <ObjectsTable />
+        </MobiDrawer>
       </form>
     </Form>
   );
