@@ -49,7 +49,7 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
           <FormItem>
             <FormLabel>{label}</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <Input type="number" {...field} />
             </FormControl>
             { !!description && <FormDescription>{description}</FormDescription> }
             <FormMessage/>
@@ -93,9 +93,11 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <FieldGroup>
-          { featureColumns.map((column) => (
-            <FeatureField key={column} name={column} label={column}/>
-          ))}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            { featureColumns.map((column) => (
+              <FeatureField key={column} name={column} label={column}/>
+            ))}
+          </div>
         </FieldGroup>
         <Button className="mt-4 float-right" type="submit" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? "Submitting..." : "Check classification"}
