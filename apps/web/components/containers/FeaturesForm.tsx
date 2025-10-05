@@ -46,17 +46,47 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
     description?: string;
   };
 
-  const modelsList: Choice[] = [
-    { id: "20251005_021226", label: "Toss a coin", subtitle: "Accuracy: ...", description: "Not very accurate" },
-    { id: "unnown2", label: "Unknown2", subtitle: "?", description: "404 model not found" },
-    { id: "unnown3", label: "Unknown3", subtitle: "?", description: "404 model not found" },
-    { id: "unnown4", label: "Unknown4", subtitle: "?", description: "404 model not found" },
-    { id: "unnown5", label: "Unknown5", subtitle: "?", description: "404 model not found" },
-    { id: "unnown6", label: "Unknown6", subtitle: "?", description: "404 model not found" },
-    { id: "unnown7", label: "Unknown7", subtitle: "?", description: "404 model not found" },
-    { id: "unnown9", label: "Unknown9", subtitle: "?", description: "404 model not found" },
-    { id: "unnown10", label: "Unknown10", subtitle: "?", description: "404 model not found" },
-  ];
+  const [modelsList, setModelsList] = React.useState<Choice[]>([
+    { id: "loading", label: "Loading models...", subtitle: "", description: "Please wait" },
+  ]);
+  const [modelsLoading, setModelsLoading] = React.useState(true);
+  const [modelsError, setModelsError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setModelsLoading(true);
+      setModelsError(null);
+      try {
+        const res = await fetch("/api/models", { cache: "no-store" });
+        if (!res.ok) throw new Error(`Failed to load models (status ${res.status})`);
+        const data: Array<{ id: string; name: string; accuracy: number | null; family: string; runId: string }>
+          = await res.json();
+        if (cancelled) return;
+        const choices: Choice[] = (data && Array.isArray(data) ? data : []).map((m) => ({
+          id: m.id,
+          label: m.name || `${m.family.toUpperCase()} ${m.runId}`,
+          subtitle: typeof m.accuracy === 'number' ? `Accuracy: ${(m.accuracy * 100).toFixed(2)}%` : "Accuracy: n/a",
+          description: `${m.family} • ${m.runId}`,
+        }));
+        setModelsList(choices.length ? choices : [
+          { id: "no-models", label: "No models found", subtitle: "", description: "Run sync to add artifacts" },
+        ]);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'Unknown error';
+        if (!cancelled) {
+          setModelsError(message);
+          setModelsList([
+            { id: "error", label: "Failed to load models", subtitle: message, description: "Check server logs" },
+          ]);
+        }
+      } finally {
+        if (!cancelled) setModelsLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
   const FeatureField = ({ name, label, description }: FeatureFieldProps) => {
     return (
