@@ -150,6 +150,7 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
         <MobiDrawer open={rightOpen} onOpenChange={setRightOpen} title="Objects database" variant="right">
           <ObjectsTable
             onSelect={handleObjectSelection}
+            minimal
           />
         </MobiDrawer>
       </form>
