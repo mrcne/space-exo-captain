@@ -96,8 +96,8 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
 
   return (
     <Form {...form}>
-      <div className="md:pl-80 md:pr-80">
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="md:pl-80 md:pr-80">
           <div className="mb-4 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 md:hidden">
               <Dialog.Root open={leftOpen} onOpenChange={setLeftOpen}>
@@ -150,22 +150,22 @@ const FeaturesForm: React.FC<Props> = ({ onSuccess }) => {
           <Button className="mt-4 float-right" type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? "Submitting..." : "Check classification"}
           </Button>
-        </form>
-      </div>
+        </div>
 
-      <div className="hidden md:block">
-        <aside className="fixed left-[220px] top-14 bottom-0 z-30 w-80 border-r bg-card p-4 shadow-sm">
-          <div className="pb-2">
-            <div className="text-base font-semibold">Model Settings</div>
-          </div>
-        </aside>
+        <div className="hidden md:block">
+          <aside className="fixed left-[220px] top-14 bottom-0 z-30 w-80 border-r bg-card p-4 shadow-sm">
+            <div className="pb-2">
+              <div className="text-base font-semibold">Model Settings</div>
+            </div>
+          </aside>
 
-        <aside className="fixed right-0 top-14 bottom-0 z-30 w-80 border-l bg-card p-4 shadow-sm">
-          <div className="pb-2">
-            <div className="text-base font-semibold">Objects database</div>
-          </div>
-        </aside>
-      </div>
+          <aside className="fixed right-0 top-14 bottom-0 z-30 w-80 border-l bg-card p-4 shadow-sm">
+            <div className="pb-2">
+              <div className="text-base font-semibold">Objects database</div>
+            </div>
+          </aside>
+        </div>
+      </form>
     </Form>
   );
 }
