@@ -9,11 +9,22 @@ import tensorflow as tf
 from tensorflow import keras
 
 from ..config import load_config
-from ..data import load_table
+from ..data import load_table, basic_clean
 from ..preprocess import build_preprocessor
 from ..utils import timestamp_dir
-
+from ..feature_select import drop_bad_columns
+from ..datafix import coerce_numeric
 from .models_keras import build_mlp, build_mlp_bn, build_cnn1d, build_feature_transformer
+def make_optimizer():
+    # Try Keras AdamW (TF >= 2.11), else TFA AdamW, else plain Adam
+    try:
+        return keras.optimizers.AdamW(learning_rate=3e-4, weight_decay=1e-4)
+    except Exception:
+        try:
+            from tensorflow_addons.optimizers import AdamW
+            return AdamW(learning_rate=3e-4, weight_decay=1e-4)
+        except Exception:
+            return keras.optimizers.Adam(learning_rate=3e-4)
 
 def compute_class_weights(y: np.ndarray) -> dict:
     from sklearn.utils.class_weight import compute_class_weight
@@ -57,11 +68,17 @@ def main():
     # 1) Load without dropping rows (imputer handles NaNs)
     df = load_table(args.input)
     df = df.dropna(axis="columns", how="all")
+    #df = basic_clean(df)
     if target not in df.columns:
         raise ValueError(f"Target column '{target}' not in input.")
     df = df.drop(columns=[c for c in drop_cols if c in df.columns], errors="ignore")
     df = df[~df[target].isna()].copy()
-
+    df = df[['pl_rade', 'pl_trandep', 'pl_insol', 'st_pmra', 'st_logg',
+             'st_dist', 'pl_orbper', 'pl_tranmid', 'pl_radeerr1', 'pl_eqt', target]]
+    # NEW: prune junk columns and fix dtypes so numerics become true numerics
+    df = drop_bad_columns(df, max_missing_pct=0.80, min_unique_ratio=0.0005)
+    df = coerce_numeric(df)
+    
     # Labels
     y_cat = df[target].astype("category")
     classes = list(y_cat.cat.categories)
@@ -92,7 +109,7 @@ def main():
     optimizer = keras.optimizers.AdamW(learning_rate=3e-4, weight_decay=1e-4)
     model.compile(
         optimizer=optimizer,
-        loss=keras.losses.SparseCategoricalCrossentropy(label_smoothing=0.05),
+        loss=keras.losses.SparseCategoricalCrossentropy(),
         metrics=["accuracy"]
     )
 

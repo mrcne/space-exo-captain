@@ -1,0 +1,23 @@
+{
+  "target": "tfopwg_disp",
+  "drop_cols": [
+    "rowid",
+    "toi",
+    "tid",
+    "ctoi_alias",
+    "rastr",
+    "decstr",
+    "toi_created",
+    "rowupdate"
+  ],
+  "classes": [
+    "APC",
+    "CP",
+    "FA",
+    "FP",
+    "KP",
+    "PC"
+  ],
+  "model_kind": "mlp_bn",
+  "input_dim": 10
+}
